@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+python-multipart
+supabase
+python-dotenv
+pydantic
+pydantic-settings
+numpy
+opencv-python-headless
+ultralytics
+python-jose[cryptography]
+passlib[bcrypt]

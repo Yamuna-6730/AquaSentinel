@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+@theme {
+  --color-navy-900: #0a192f;
+  --color-navy-800: #112240;
+  --color-cyan-500: #00d2ff;
+  --color-cyan-400: #46e8ff;
+}
+
+:root {
+  --background: #0a192f;
+  --foreground: #e6f1ff;
+  --primary: #00d2ff;
+}
+
+@layer base {
+  body {
+    background: radial-gradient(circle at 50% 50%, #112240 0%, #0a192f 100%);
+    color: var(--foreground);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+}
+
+@layer utilities {
+  .glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-card {
+    background: rgba(17, 34, 64, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 210, 255, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  }
+
+  .glow-text {
+    text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+  }
+
+  .ocean-gradient {
+    background: linear-gradient(135deg, #0a192f 0%, #00d2ff 100%);
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a192f;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #112240;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00d2ff;
+}
