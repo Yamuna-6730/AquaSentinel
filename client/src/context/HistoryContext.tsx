@@ -27,14 +27,22 @@ export const HistoryProvider = ({ children }: { children: React.ReactNode }) => 
             const saved = localStorage.getItem('vasm_history');
             if (saved) {
                 const parsed = JSON.parse(saved);
-                // Convert timestamp strings back to Date objects
-                const formatted = parsed.map((item: any) => ({
-                    ...item,
-                    timestamp: new Date(item.timestamp)
-                }));
-                // Sort by newest first
-                formatted.sort((a: HistoryEntry, b: HistoryEntry) => b.timestamp.getTime() - a.timestamp.getTime());
-                setHistory(formatted);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    // Convert timestamp strings back to Date objects
+                    const formatted = parsed.map((item: any) => ({
+                        ...item,
+                        timestamp: new Date(item.timestamp)
+                    }));
+                    // Sort by newest first
+                    formatted.sort((a: HistoryEntry, b: HistoryEntry) => b.timestamp.getTime() - a.timestamp.getTime());
+                    setHistory(formatted);
+                } else {
+                    // saved exists but empty array — fall through to seed below
+                    seedHistory();
+                }
+            } else {
+                // Seed with dummy history using project public assets when none exists
+                seedHistory();
             }
         } catch (e) {
             console.error("Failed to parse history from localStorage", e);
@@ -42,6 +50,46 @@ export const HistoryProvider = ({ children }: { children: React.ReactNode }) => 
         setIsLoaded(true);
     }, []);
 
+    // Helper to seed history (kept separate to allow reuse)
+    const seedHistory = () => {
+        const now = Date.now();
+        const seed: HistoryEntry[] = [
+            {
+                id: 'seed1',
+                image: '/next.svg',
+                timestamp: new Date(now - 1000 * 60 * 5),
+                objectDetected: true,
+                objectType: 'fish',
+                riskZone: 'Low',
+                distance: '3.4m',
+                visibilityScore: 78,
+                gpsCoordinates: '12.9716,77.5946'
+            },
+            {
+                id: 'seed2',
+                image: '/globe.svg',
+                timestamp: new Date(now - 1000 * 60 * 30),
+                objectDetected: true,
+                objectType: 'trash branch',
+                riskZone: 'Medium',
+                distance: '7.1m',
+                visibilityScore: 45,
+                gpsCoordinates: '12.2958,76.6394'
+            },
+            {
+                id: 'seed3',
+                image: '/file.svg',
+                timestamp: new Date(now - 1000 * 60 * 60 * 5),
+                objectDetected: false,
+                objectType: undefined,
+                riskZone: 'Low',
+                distance: '--',
+                visibilityScore: 99,
+                gpsCoordinates: '13.0827,80.2707'
+            }
+        ];
+        setHistory(seed);
+    };
     // Save to localStorage whenever history changes
     useEffect(() => {
         if (isLoaded) {

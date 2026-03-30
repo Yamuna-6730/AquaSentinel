@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+
 import { Menu, X, Waves } from 'lucide-react';
 import Link from 'next/link';
 
@@ -21,7 +22,7 @@ const Navbar = () => {
         { name: 'About', href: '#about' },
         { name: 'Technology', href: '#technology' },
         { name: '3D Model', href: '#3d-model' },
-        { name: 'Features', href: '#features' },
+        { name: 'Real-time Dashboard', href: '/real-time-dashboard' },
         { name: 'Contact', href: '#contact' },
     ];
 

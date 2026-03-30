@@ -1,6 +1,8 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from server.services.model_service import ModelService
 from server.services.supabase_service import SupabaseService
+from server.services.ws_instance import manager
+
 import numpy as np
 import cv2
 import random
@@ -18,9 +20,10 @@ class FrameInput(BaseModel):
 @router.post("/image")
 async def predict_image(file: UploadFile = File(...)):
     """
-    1. Inference via ModelService
-    2. Upload image to Supabase
-    3. Save results to DB (uploads, telemetry_results, detections)
+    Simplified endpoint for hackathon:
+    1. Read image
+    2. Run YOLOv8 inference
+    3. Return results directly (skipping Supabase storage)
     """
     try:
         # Read file bytes
@@ -31,50 +34,21 @@ async def predict_image(file: UploadFile = File(...)):
         if img is None:
             raise HTTPException(status_code=400, detail="Invalid image file")
 
-        # 1. Mock/Actual Model Inference
+        # Perform Model Inference
+        # Returns { detections: [...], telemetry: { ... }, annotated_image: "data:..." }
         inference_result = model_service.predict(img)
+        telemetry = inference_result.get("telemetry", {})
+        risk = telemetry.get("risk_level", "Low")
 
-        # 2. Upload file to Supabase Storage
-        file_url = await supabase_service.upload_file(
-            file_content=contents,
-            filename=file.filename,
-            content_type=file.content_type or "image/jpeg"
-        )
-
-        # 3. Save to "uploads" table
-        upload_record = await supabase_service.add_upload_record(
-            filename=file.filename,
-            file_type=file.content_type or "image/jpeg",
-            file_url=file_url
-        )
-        upload_id = upload_record.get("id")
-
-        # 4. Save to "telemetry_results" table
-        lat = random.uniform(12.0, 13.0) 
-        lng = random.uniform(77.0, 78.0) 
-        
-        telemetry_record = await supabase_service.add_telemetry_result(
-            upload_id=upload_id,
-            telemetry=inference_result.get("telemetry"),
-            lat=lat,
-            lng=lng
-        )
-        telemetry_id = telemetry_record.get("id")
-
-        # 5. Save multiple detections
-        detections_list = inference_result.get("detections", [])
-        saved_detections = await supabase_service.add_detections(
-            telemetry_id=telemetry_id,
-            detections=detections_list
-        )
+        if risk in ["Medium", "High"]:
+            await manager.send_alert(
+                f"⚠️ {risk} Risk | Distance: {round(telemetry.get('distance', 0),2)}m"
+            )
 
         return {
             "status": "success",
-            "upload_id": upload_id,
-            "telemetry_id": telemetry_id,
-            "file_url": file_url,
             "telemetry": inference_result.get("telemetry"),
-            "detections": saved_detections,
+            "detections": inference_result.get("detections"),
             "annotated_image": inference_result.get("annotated_image")
         }
     except Exception as e:
@@ -94,7 +68,15 @@ async def predict_frame(data: FrameInput):
             raise HTTPException(status_code=400, detail="Invalid base64 image")
             
         inference_result = model_service.predict(img)
+        telemetry = inference_result.get("telemetry", {})
+        risk = telemetry.get("risk_level", "Low")
+
+        if risk in ["Medium", "High"]:
+            await manager.send_alert(
+                f"⚠️ {risk} Risk | Distance: {round(telemetry.get('distance', 0),2)}m"
+            )
         return inference_result
+    
     except Exception as e:
         import traceback
         print(f"Prediction Error (Frame): {e}")

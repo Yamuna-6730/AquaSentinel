@@ -10,3 +10,6 @@ opencv-python-headless
 ultralytics
 python-jose[cryptography]
 passlib[bcrypt]
+google-generativeai
+reportlab
+matplotlib

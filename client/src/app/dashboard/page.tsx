@@ -6,12 +6,15 @@ import { SwitchCamera, Upload as UploadIcon, ShieldAlert } from 'lucide-react';
 import UploadCard from '@/components/dashboard/UploadCard';
 import CameraFeed from '@/components/dashboard/CameraFeed';
 import TelemetryPanel, { TelemetryData } from '@/components/dashboard/TelemetryPanel';
+import { useHistory } from '@/context/HistoryContext';
 
 export default function DashboardPage() {
     const [activeTab, setActiveTab] = useState<'upload' | 'camera'>('upload');
     const [isDetecting, setIsDetecting] = useState(false);
     const [telemetry, setTelemetry] = useState<TelemetryData | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+    const { addEntry } = useHistory();
 
     // AI Detection Process using FastAPI Backend
     const processDetection = useCallback(async (source: File | string, type: 'upload' | 'camera') => {
@@ -54,13 +57,21 @@ export default function DashboardPage() {
                 };
 
                 setTelemetry(telemetryData);
+
+                // Add to persistent history if an object is detected or it's a manual upload
+                if (type === 'upload' || (type === 'camera' && telemetryData.objectDetected)) {
+                    addEntry({
+                        ...telemetryData,
+                        image: result.annotated_image || previewUrl || '',
+                    });
+                }
             }
         } catch (error) {
             console.error("AI Detection Error:", error);
         } finally {
             setIsDetecting(false);
         }
-    }, []);
+    }, [addEntry, previewUrl]);
 
     const handleFileUpload = (file: File) => {
         processDetection(file, 'upload');
